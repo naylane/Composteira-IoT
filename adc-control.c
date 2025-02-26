@@ -13,23 +13,22 @@
 #define I2C_SDA 14
 #define I2C_SCL 15
 #define endereco 0x3C
-bool cor = true;
 
 #define BTN_A 5                     // Pino do botão A conectado ao GPIO 5.
 #define BTN_B 6                     // Pino do botão B conectado ao GPIO 6.
 #define BTN_STICK 22                // Pino do botão do Joystick conectado ao GPIO 22.
 
 #define DEBOUNCE_TIME 200000        // Tempo para debounce em ms
-#define WAIT_TIME 500000            // ...
+#define WAIT_TIME     1000000       // ...
 uint32_t last_time = 0;             // Armazena o tempo do último evento do botão (em microssegundos)
 
 #define PWM_FREQ   20000            // 20 kHz
 #define PWM_WRAP   255              // Valor do WRAP (período) para o PWM. 8 bits de wrap (256 valores)
 const float DIVIDER_PWM = 125.0;    // Valor do divisor de clock para o PWM.
 
-#define LED_R 12
+#define LED_R 13
 #define LED_G 11
-#define LED_B 13
+#define LED_B 12
 
 // --- VARIAVEIS GLOBAIS
 
@@ -55,30 +54,28 @@ void setup_led(uint pin);
 int main() {
     setup();
 
-    int x = 63, y = 31; // Valor central do ssd1306
-
     while (1) {
         led_status_display(&ssd);
 
-        printf("Temperatura: %d; Umidade: %d; Oxigenio: %d \n", temperatura, umidade, oxigenio);
+        //printf("Temperatura: %d; Umidade: %d; Oxigenio: %d \n", temperatura, umidade, oxigenio);
 
         if ((temperatura > 60) || (umidade > 70) || (oxigenio < 15)) {
             set_led(LED_R, 1);
+            set_led(LED_G, 0);
             set_led(LED_B, 0);
-            set_led(LED_G, 0);
-        } 
-        else if ((temperatura == 60) && (umidade == 70) && (oxigenio == 15)) {
-            set_led(LED_G, 0);
+        }
+        else if ((40 < temperatura && temperatura < 60) && (50 < umidade && umidade < 70) && (oxigenio > 15)) {
             set_led(LED_R, 0);
-            set_led(LED_B, 1);
+            set_led(LED_G, 1);
+            set_led(LED_B, 0);
         }
         else {
-            set_led(LED_G, 1);
             set_led(LED_R, 0);
-            set_led(LED_B, 0);
+            set_led(LED_G, 0);
+            set_led(LED_B, 1);
         }
 
-        sleep_ms(2000);
+        sleep_ms(1000);
     }
 }
 
@@ -188,17 +185,13 @@ void setup() {
 
 
 /**
- * @brief Configura Display ssd1306 via I2C.
+ * @brief Configura Display ssd1306 via I2C, iniciando com todos os pixels desligados.
 */
 void setup_display() {
     ssd1306_init(&ssd, WIDTH, HEIGHT, false, endereco, I2C_PORT); // Inicializa o display
     ssd1306_config(&ssd);    
     ssd1306_send_data(&ssd);   
-
-    // Limpa o display. O display inicia com todos os pixels desligados.
-    ssd1306_fill(&ssd, !cor);
-    //ssd1306_rect(&ssd, 31, 63, 8, 8, cor, !cor); // Desenha um retângulo    
-    //ssd1306_send_data(&ssd);
+    ssd1306_fill(&ssd, false);
 }
 
 
