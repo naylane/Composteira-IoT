@@ -33,25 +33,13 @@ const float DIVIDER_PWM = 125.0;    // Valor do divisor de clock para o PWM.
 // --- VARIAVEIS GLOBAIS
 
 ssd1306_t ssd;
-volatile bool leds_pwm_state = 0; 
-volatile bool led_green_state = 0;
-volatile bool BUTTON_A_pressionado = false;
-
-int pulso_x;
-int pulso_y;
-uint16_t adc_value_x;
-uint16_t adc_value_y; 
-uint slice_blue;
-uint slice_red;
 
 // --- DECLARAÇÃO DE FUNÇÕES
 
 int le_dados();
 void irq_buttons(uint gpio, uint32_t events);
-void converte_joystic (int input);
 void setup();
 void setup_display();
-void setup_pwm_leds();
 void setup_button(uint pin);
 void setup_led(uint pin);
 
@@ -64,45 +52,8 @@ int main() {
 
     int x = 63, y = 31; // Valor central do ssd1306
 
-    while (true) {
-        converte_joystic(0);
-        converte_joystic(1);
-        
-        pwm_set_gpio_level(LED_R, pulso_x);  
-        pwm_set_gpio_level(LED_B, pulso_y); 
-        
+    while (1) {
         ssd1306_fill(&ssd, !cor); // Limpa o display
-        
-        if(led_green_state) {
-            ssd1306_rect(&ssd, 1, 1, 126, 62, cor, !cor); // Desenha um retângulo borda
-        }
-
-        // Eixo X
-        if(adc_value_y == 2048){ // Se estiver no meio 
-            x = 63 ;
-        }
-        else if (adc_value_y > 2048){ // Se aumentar os valores
-            x = ((adc_value_y - 2048) / 32) + 54;
-        }
-        else{ // Se diminuir os valores
-            x = (((adc_value_y - 2048)) / 32) + 67;
-        }
-        
-        // Eixo Y
-        if(adc_value_x == 2048)
-            y = 31;
-        else if(adc_value_x > 2048){
-            y =  67 - (adc_value_x / 64);
-            // y =  ((adc_value_x - 2048) / 64) + 24; PARA VALOR INVERTIDO
-        }
-        else{
-            y = 54 - ((adc_value_x) / 64);
-            // y =  ((adc_value_x - 2048) / 64) + 35; //PARA VALOR INVERTIDO
-        }
-        
-        ssd1306_rect(&ssd, 3, 3, 122, 60, cor, !cor); // Desenha um retângulo
-        ssd1306_rect(&ssd, y, x, 8, 8, cor, cor); // Desenha um retângulo        
-        ssd1306_send_data(&ssd); // Atualiza o display
 
         sleep_ms(100);
     }
@@ -120,17 +71,14 @@ void irq_buttons(uint gpio, uint32_t events){
     
     if(current_time - last_time > DEBOUNCE_TIME){
         if (gpio == BTN_A) {
-            // Habilita o PWM
-            pwm_set_enabled(slice_red, leds_pwm_state);
-            pwm_set_enabled(slice_blue, leds_pwm_state); 
-            leds_pwm_state = !leds_pwm_state;
+            // temperatura
         }
         else if (gpio == BTN_B) {
-            reset_usb_boot(0, 0); //func para entrar no modo bootsel 
+            // umidade
+            //reset_usb_boot(0, 0);
         }        
         else if (gpio == BTN_STICK) {
-            led_green_state = !led_green_state;
-            gpio_put(LED_G, led_green_state);
+            // oxigênio
         }
         last_time = current_time; // Atualiza o tempo para o debounce
     }
@@ -144,8 +92,10 @@ void setup() {
     // Inicializa entradas e saídas
     stdio_init_all();
 
-    // Configura o LED Verde
+    // Configura os LEDs RGB
+    setup_led(LED_R);
     setup_led(LED_G);
+    setup_led(LED_B);
 
     // Configura botões A e B e botão do joystick
     setup_button(BTN_A);
@@ -156,14 +106,6 @@ void setup() {
     gpio_set_irq_enabled_with_callback(BTN_A, GPIO_IRQ_EDGE_RISE, true, &irq_buttons);
     gpio_set_irq_enabled_with_callback(BTN_B, GPIO_IRQ_EDGE_RISE, true, &irq_buttons);
     gpio_set_irq_enabled_with_callback(BTN_STICK, GPIO_IRQ_EDGE_FALL, true, &irq_buttons); 
-    
-    // Inicia ADC
-    adc_init();
-    adc_gpio_init(EIXO_X);
-    adc_gpio_init(EIXO_Y);
-
-    // Inicializa o PWM para os LEDs Vermelho e Azul
-    setup_pwm_leds();
 
     // Inicializa I2C com 400 Khz
     i2c_init(I2C_PORT, 400 * 1000);
@@ -189,32 +131,6 @@ void setup_display() {
     ssd1306_fill(&ssd, !cor);
     ssd1306_rect(&ssd, 31, 63, 8, 8, cor, !cor); // Desenha um retângulo    
     ssd1306_send_data(&ssd);
-}
-
-
-/**
- * @brief Configura LEDs RGB como saídas PWM.
-*/
-void setup_pwm_leds() {
-    gpio_set_function(LED_B, GPIO_FUNC_PWM);
-    gpio_set_function(LED_R, GPIO_FUNC_PWM);
-
-    // Obtém os números dos canais PWM para os pinos
-    slice_blue = pwm_gpio_to_slice_num(LED_B);
-    slice_red = pwm_gpio_to_slice_num(LED_R);
-
-    // Configuração da frequência PWM
-    pwm_set_clkdiv(slice_red, (float)clock_get_hz(clk_sys) / PWM_FREQ / (PWM_WRAP + 1));
-    pwm_set_clkdiv(slice_blue, (float)clock_get_hz(clk_sys) / PWM_FREQ / (PWM_WRAP + 1));
-
-    // Configura o wrap do contador PWM para 8 bits (256)
-    pwm_set_wrap(slice_blue, PWM_WRAP); 
-    pwm_set_wrap(slice_red, PWM_WRAP);
-    
-    // Habilita o PWM
-    pwm_set_enabled(slice_red, 1);
-    pwm_set_enabled(slice_blue, 1);
-    leds_pwm_state = 1;
 }
 
 
