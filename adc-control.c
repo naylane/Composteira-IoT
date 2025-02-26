@@ -41,6 +41,7 @@ int oxigenio = 15;
 // --- DECLARAÇÃO DE FUNÇÕES
 
 void update_data(int *data, bool increase);
+void led_status_display(ssd1306_t *ssd);
 void irq_buttons(uint gpio, uint32_t events);
 void setup();
 void setup_display();
@@ -57,11 +58,11 @@ int main() {
     int x = 63, y = 31; // Valor central do ssd1306
 
     while (1) {
-        //ssd1306_fill(&ssd, !cor); // Limpa o display
+        led_status_display(&ssd);
 
         printf("Temperatura: %d; Umidade: %d; Oxigenio: %d \n", temperatura, umidade, oxigenio);
 
-        if ((temperatura > 60) && (umidade > 70) && (oxigenio < 15)) {
+        if ((temperatura > 60) || (umidade > 70) || (oxigenio < 15)) {
             set_led(LED_R, 1);
             set_led(LED_B, 0);
             set_led(LED_G, 0);
@@ -123,6 +124,36 @@ void update_data(int *data, bool increase) {
 
 
 /**
+ * @brief Atualiza o display com o estado dos LEDs.
+ *
+ * @param ssd Ponteiro para a estrutura do display.
+ */
+void led_status_display(ssd1306_t *ssd) {
+    // Limpa o display
+    ssd1306_fill(ssd, false);
+
+    char msg_temp[10];  // Buffer para armazenar a string formatada
+    sprintf(msg_temp, "T %d", temperatura);
+    ssd1306_draw_string(ssd, msg_temp, 0, 0);
+
+    char msg_umid[10];  // Buffer para armazenar a string formatada
+    sprintf(msg_umid, "U %d", umidade);
+    ssd1306_draw_string(ssd, msg_umid, 0, 15);
+
+    char msg_oxig[10];  // Buffer para armazenar a string formatada
+    sprintf(msg_oxig, "O %d", oxigenio);
+    ssd1306_draw_string(ssd, msg_oxig, 0, 30);
+
+    bool alert = gpio_get(LED_R);
+    char *msg_alert = alert ? "Alerta" : "Ok";
+    ssd1306_draw_string(ssd, msg_alert, 0, 45);
+
+    // Atualiza o display
+    ssd1306_send_data(ssd); 
+}
+
+
+/**
  * @brief Inicialização e configuração geral.
 */
 void setup() {
@@ -166,8 +197,8 @@ void setup_display() {
 
     // Limpa o display. O display inicia com todos os pixels desligados.
     ssd1306_fill(&ssd, !cor);
-    ssd1306_rect(&ssd, 31, 63, 8, 8, cor, !cor); // Desenha um retângulo    
-    ssd1306_send_data(&ssd);
+    //ssd1306_rect(&ssd, 31, 63, 8, 8, cor, !cor); // Desenha um retângulo    
+    //ssd1306_send_data(&ssd);
 }
 
 
