@@ -20,7 +20,7 @@ bool cor = true;
 #define BTN_STICK 22                // Pino do botão do Joystick conectado ao GPIO 22.
 
 #define DEBOUNCE_TIME 200000        // Tempo para debounce em ms
-#define WAIT_TIME 100000            // Tempo para debounce em ms
+#define WAIT_TIME 500000            // ...
 uint32_t last_time = 0;             // Armazena o tempo do último evento do botão (em microssegundos)
 
 #define PWM_FREQ   20000            // 20 kHz
@@ -40,7 +40,7 @@ int oxigenio = 15;
 
 // --- DECLARAÇÃO DE FUNÇÕES
 
-void update_data(int data);
+void update_data(int *data, bool increase);
 void irq_buttons(uint gpio, uint32_t events);
 void setup();
 void setup_display();
@@ -57,11 +57,27 @@ int main() {
     int x = 63, y = 31; // Valor central do ssd1306
 
     while (1) {
-        ssd1306_fill(&ssd, !cor); // Limpa o display
+        //ssd1306_fill(&ssd, !cor); // Limpa o display
 
-        printf("Temperatura: %d; Umidade: %d; Oxigenio: %d", temperatura, umidade, oxigenio);
+        printf("Temperatura: %d; Umidade: %d; Oxigenio: %d \n", temperatura, umidade, oxigenio);
 
-        sleep_ms(100);
+        if ((temperatura > 60) && (umidade > 70) && (oxigenio < 15)) {
+            set_led(LED_R, 1);
+            set_led(LED_B, 0);
+            set_led(LED_G, 0);
+        } 
+        else if ((temperatura == 60) && (umidade == 70) && (oxigenio == 15)) {
+            set_led(LED_G, 0);
+            set_led(LED_R, 0);
+            set_led(LED_B, 1);
+        }
+        else {
+            set_led(LED_G, 1);
+            set_led(LED_R, 0);
+            set_led(LED_B, 0);
+        }
+
+        sleep_ms(2000);
     }
 }
 
@@ -76,15 +92,17 @@ void irq_buttons(uint gpio, uint32_t events){
     uint32_t current_time = to_us_since_boot(get_absolute_time());
     
     if(current_time - last_time > DEBOUNCE_TIME){
+        bool increase = (current_time - last_time) > WAIT_TIME;  // Se o tempo entre cliques for grande, aumenta, senão, diminui
+
         switch (gpio) {
         case BTN_A:
-            update_data(temperatura);
+            update_data(&temperatura, increase);
             break;
         case BTN_B:
-            update_data(umidade);
+            update_data(&umidade, increase);
             break;
         case BTN_STICK:
-            update_data(oxigenio);
+            update_data(&oxigenio, increase);
             break;
         default:
             break;
@@ -95,11 +113,11 @@ void irq_buttons(uint gpio, uint32_t events){
 }
 
 
-void update_data(int data) {
-    if (last_time < WAIT_TIME) {
-        data += 5;
+void update_data(int *data, bool increase) {
+    if (increase) {
+        *data += 5;
     } else {
-        data -= 5;
+        *data -= 5;
     }
 }
 
