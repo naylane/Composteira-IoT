@@ -34,11 +34,11 @@ project(adc-control C CXX ASM)
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
-
 add_executable(adc-control 
         adc-control.c 
         lib/ssd1306.c
         lib/led.c
+        lib/WS2812.c
         )
 
 pico_set_program_name(adc-control "adc-control")
@@ -48,11 +48,14 @@ pico_set_program_version(adc-control "0.1")
 pico_enable_stdio_uart(adc-control 1)
 pico_enable_stdio_usb(adc-control 1)
 
+pico_generate_pio_header(adc-control ${CMAKE_CURRENT_LIST_DIR}/lib/WS2812.pio)
+
 target_sources(adc-control PRIVATE adc-control.c)
 
 # Add the standard library to the build
 target_link_libraries(adc-control
         pico_stdlib
+        hardware_pio
         )
 
 # Add the standard include files to the build

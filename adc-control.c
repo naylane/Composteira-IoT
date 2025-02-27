@@ -1,18 +1,23 @@
 #include <stdio.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include "pico/stdlib.h"
-#include "pico/bootrom.h"
+//#include "pico/bootrom.h"
 #include "hardware/clocks.h"
 #include "hardware/i2c.h"
 #include "hardware/adc.h"
 #include "hardware/pwm.h"
+#include "hardware/pio.h"
 #include "lib/ssd1306.h"
 #include "lib/led.h"
+#include "lib/WS2812.h"
+#include "WS2812.pio.h"
 
 #define I2C_PORT i2c1
 #define I2C_SDA 14
 #define I2C_SCL 15
 #define endereco 0x3C
+
+#define WS2812_PIN 7
 
 #define BTN_A 5                     // Pino do botão A conectado ao GPIO 5.
 #define BTN_B 6                     // Pino do botão B conectado ao GPIO 6.
@@ -20,7 +25,9 @@
 
 #define DEBOUNCE_TIME 200000        // Tempo para debounce em ms
 #define WAIT_TIME     1000000       // ...
-uint32_t last_time = 0;             // Armazena o tempo do último evento do botão (em microssegundos)
+uint32_t last_time = 0;    // Tempo da última interrupção do botão do Joystick
+static uint32_t last_time_A = 0;    // Tempo da última interrupção do botão A
+static uint32_t last_time_B = 0;    // Tempo da última interrupção do botão B
 
 #define PWM_FREQ   20000            // 20 kHz
 #define PWM_WRAP   255              // Valor do WRAP (período) para o PWM. 8 bits de wrap (256 valores)
@@ -30,12 +37,16 @@ const float DIVIDER_PWM = 125.0;    // Valor do divisor de clock para o PWM.
 #define LED_G 11
 #define LED_B 12
 
+#define BUZZER_PIN 10 // Pino do Buzzer conectado ao GPIO 10.
+
 // --- VARIAVEIS GLOBAIS
 
 ssd1306_t ssd;
 int temperatura = 40;
 int umidade = 50;
 int oxigenio = 15;
+PIO pio = pio0;
+uint sm = 0;
 
 // --- DECLARAÇÃO DE FUNÇÕES
 
@@ -54,25 +65,30 @@ void setup_led(uint pin);
 int main() {
     setup();
 
+    clear_matrix(pio, sm);
+
     while (1) {
         led_status_display(&ssd);
 
-        //printf("Temperatura: %d; Umidade: %d; Oxigenio: %d \n", temperatura, umidade, oxigenio);
+        printf("Temperatura: %d; Umidade: %d; Oxigenio: %d \n", temperatura, umidade, oxigenio);
 
         if ((temperatura > 60) || (umidade > 70) || (oxigenio < 15)) {
             set_led(LED_R, 1);
             set_led(LED_G, 0);
             set_led(LED_B, 0);
+            set_led_matrix(11, pio, sm);
         }
         else if ((40 < temperatura && temperatura < 60) && (50 < umidade && umidade < 70) && (oxigenio > 15)) {
             set_led(LED_R, 0);
             set_led(LED_G, 1);
             set_led(LED_B, 0);
+            set_led_matrix(10, pio, sm);
         }
         else {
             set_led(LED_R, 0);
             set_led(LED_G, 0);
             set_led(LED_B, 1);
+            set_led_matrix(12, pio, sm);
         }
 
         sleep_ms(1000);
@@ -157,6 +173,15 @@ void setup() {
     // Inicializa entradas e saídas
     stdio_init_all();
 
+    // Inicializa o PIO para controlar a matriz de LEDs (WS2812)
+    PIO pio = pio0;
+    uint sm = 0;
+    uint offset = pio_add_program(pio, &pio_matrix_program);
+    pio_matrix_program_init(pio, sm, offset, WS2812_PIN);
+
+    // Aguarda a conexão USB
+    sleep_ms(2000); 
+
     // Configura os LEDs RGB
     setup_led(LED_R);
     setup_led(LED_G);
@@ -166,6 +191,10 @@ void setup() {
     setup_button(BTN_A);
     setup_button(BTN_B);
     setup_button(BTN_STICK);
+
+    // Inicializa buzzer
+    gpio_init(BUZZER_PIN);
+    gpio_set_dir(BUZZER_PIN, GPIO_OUT);
     
     // Configura interrupção dos botões
     gpio_set_irq_enabled_with_callback(BTN_A, GPIO_IRQ_EDGE_RISE, true, &irq_buttons);
