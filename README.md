@@ -1,39 +1,41 @@
 <div align="center">
-    <img src="https://moodle.embarcatech.cepedi.org.br/pluginfile.php/1/theme_moove/logo/1733422525/Group%20658.png" alt="Logo Embarcatech" height="100">
+    <img src="./docs/logo.png" alt="Logo Embarcatech" height="100">
 </div>
 
-<h2 align="center">  Sistema de Monitoradoramento de Composteira </h3>
+<h2 align="center">  Sistema de Monitoramento de Composteira IoT</h3>
 <h5 align="center"> Projeto final desenvolvido para o programa EmbarcaTech. </h5>
 
 
-### Sobre o projeto
+## Sobre o projeto
+A descrição completa do projeto pode ser encontrada na [Documentação](/docs/).
 
 
-### Requisitos
-
-
-### Descrição do projeto
-
-
-### Tecnologias e Ferramentas utilizadas
-- **Kit BitDogLab:**
-  - Raspberry Pi Pico W
-  - LEDs WS2812
-  - Botões A e B
-  - LED RGB
+## Tecnologias e Ferramentas utilizadas
+- **Kit BitDogLab**
 - **Linguagem de programação:** C
 - **Ambiente de Desenvolvimento:** Visual Studio Code
 
 
-### Simulação no Wokwi
-[Wokwi Web]()
+## Instruções de uso
+- É necessário instalar o SDK da Raspberry Pi Pico e realizar as configurações iniciais. [1]
 
+Para ter acesso ao projeto, clone o repositório disponível na [plataforma GitHub](https://github.com/naylane/Composteira-IoT).
 
-### Referências
-- [1] [Datasheet do RP2040](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
+Após clonar o repositório, no terminal, navegue até a pasta do projeto e execute os comandos:
+```bash
+mkdir build && cd build
+cmake ..
+make
+```
+Para testar com LED na Raspberry Pi Pico, altere o pino GPIO 22 por GPIO 12, conecte a BitDogLab no computador enquanto pressiona o botão `BOOTSEL` e rode o código pelo VS Code.
 
+⚠️ **Observação:** também é possível simular a atividade pelo Wokwi no Visual Studio Code. Basta instalar a extensão e executar o arquivo 'diagram.json'.
 
-### Desenvolvedora:
+Ou, se preferir, [clique aqui para ver a simulação no Wokwi Web](https://wokwi.com/projects/422603356971975681).
+
+<br>
+
+## Desenvolvedora:
 <table>
   <tr>
     <td align="center"><img style="" src="https://avatars.githubusercontent.com/u/89545660?v=4" width="100px;" ><br /> <sub> <b> Naylane Ribeiro </b> </sub>
