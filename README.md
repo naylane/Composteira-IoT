@@ -5,16 +5,19 @@
 <h2 align="center">  Sistema de Monitoramento de Composteira IoT</h3>
 <h5 align="center"> Projeto final desenvolvido para o programa EmbarcaTech. </h5>
 
+<br>
 
 ## Sobre o projeto
-A descrição completa do projeto pode ser encontrada na [Documentação](/docs/).
+A descrição completa do projeto pode ser encontrada na [Documentação](/docs/) e o funcionamento do projeto no BitDogLab pode ser visto no [Vídeo de Apresentação](https://drive.google.com/drive/folders/1hXUiHSo0h73csPhoPgYV7acifhWlX10m?usp=sharing).
 
+<br>
 
 ## Tecnologias e Ferramentas utilizadas
 - **Kit BitDogLab**
 - **Linguagem de programação:** C
 - **Ambiente de Desenvolvimento:** Visual Studio Code
 
+<br>
 
 ## Instruções de uso
 - É necessário instalar o SDK da Raspberry Pi Pico e realizar as configurações iniciais. [1]
