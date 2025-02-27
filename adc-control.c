@@ -1,7 +1,5 @@
 #include <stdio.h>
-//#include <stdlib.h>
 #include "pico/stdlib.h"
-//#include "pico/bootrom.h"
 #include "hardware/clocks.h"
 #include "hardware/i2c.h"
 #include "hardware/adc.h"
@@ -42,9 +40,9 @@ const float DIVIDER_PWM = 125.0;    // Valor do divisor de clock para o PWM.
 // --- VARIAVEIS GLOBAIS
 
 ssd1306_t ssd;
-int temperatura = 40;
-int umidade = 50;
-int oxigenio = 15;
+int temperatura = 39;
+int umidade = 49;
+int oxigenio = 14;
 PIO pio = pio0;
 uint sm = 0;
 
@@ -53,8 +51,12 @@ uint sm = 0;
 void update_data(int *data, bool increase);
 void led_status_display(ssd1306_t *ssd);
 void irq_buttons(uint gpio, uint32_t events);
+void beep_buzzer();
+void buzzer_tone(int frequency);
+void buzzer_off();
 void setup();
 void setup_display();
+void setup_buzzer();
 void setup_button(uint pin);
 void setup_led(uint pin);
 
@@ -76,7 +78,12 @@ int main() {
             set_led(LED_R, 1);
             set_led(LED_G, 0);
             set_led(LED_B, 0);
+
             set_led_matrix(11, pio, sm);
+
+            buzzer_tone(100); // Som de alerta (em Hz)
+            sleep_ms(500);
+            buzzer_off();      
         }
         else if ((40 < temperatura && temperatura < 60) && (50 < umidade && umidade < 70) && (oxigenio > 15)) {
             set_led(LED_R, 0);
@@ -167,6 +174,25 @@ void led_status_display(ssd1306_t *ssd) {
 
 
 /**
+ * @brief Função para tocar um tom (frequência em Hz)
+ */
+void buzzer_tone(int frequency) {
+    uint slice = pwm_gpio_to_slice_num(BUZZER_PIN);
+    uint32_t wrap_value = clock_get_hz(clk_sys) / (DIVIDER_PWM * frequency);
+    pwm_set_wrap(slice, wrap_value);
+    pwm_set_chan_level(slice, PWM_CHAN_A, wrap_value / 2); // 50% do ciclo
+}
+
+
+/**
+ * @brief Função para desligar o buzzer PWM.
+ */
+void buzzer_off() {
+    pwm_set_chan_level(pwm_gpio_to_slice_num(BUZZER_PIN), PWM_CHAN_A, 0);
+}
+
+
+/**
  * @brief Inicialização e configuração geral.
 */
 void setup() {
@@ -192,9 +218,8 @@ void setup() {
     setup_button(BTN_B);
     setup_button(BTN_STICK);
 
-    // Inicializa buzzer
-    gpio_init(BUZZER_PIN);
-    gpio_set_dir(BUZZER_PIN, GPIO_OUT);
+    // Configura Buzzer como saída PWM
+    setup_buzzer();
     
     // Configura interrupção dos botões
     gpio_set_irq_enabled_with_callback(BTN_A, GPIO_IRQ_EDGE_RISE, true, &irq_buttons);
@@ -221,6 +246,18 @@ void setup_display() {
     ssd1306_config(&ssd);    
     ssd1306_send_data(&ssd);   
     ssd1306_fill(&ssd, false);
+}
+
+
+/**
+ * @brief Configura Buzzer como saída PWM.
+*/
+void setup_buzzer() {
+    gpio_set_function(BUZZER_PIN, GPIO_FUNC_PWM); // Configura o pino para PWM
+    uint slice = pwm_gpio_to_slice_num(BUZZER_PIN);
+    pwm_set_wrap(slice, PWM_WRAP);  // Define a resolução do PWM
+    pwm_set_clkdiv(slice, DIVIDER_PWM);  // Define o divisor do clock
+    pwm_set_enabled(slice, true);  // Habilita PWM
 }
 
 
