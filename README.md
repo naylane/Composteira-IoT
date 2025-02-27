@@ -34,8 +34,6 @@ Para testar com LED na Raspberry Pi Pico, altere o pino GPIO 22 por GPIO 12, con
 
 ⚠️ **Observação:** também é possível simular a atividade pelo Wokwi no Visual Studio Code. Basta instalar a extensão e executar o arquivo 'diagram.json'.
 
-Ou, se preferir, [clique aqui para ver a simulação no Wokwi Web](https://wokwi.com/projects/422603356971975681).
-
 <br>
 
 ## Desenvolvedora:
