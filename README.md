@@ -8,7 +8,7 @@
 <br>
 
 ## Sobre o projeto
-A descrição completa do projeto pode ser encontrada na [Documentação](/docs/) e o funcionamento do projeto no BitDogLab pode ser visto no [Vídeo de Apresentação](https://drive.google.com/drive/folders/1hXUiHSo0h73csPhoPgYV7acifhWlX10m?usp=sharing).
+A descrição completa do projeto pode ser encontrada na [Documentação](/docs/U7T_tic370101092_Naylane.pdf) e o funcionamento do projeto no BitDogLab pode ser visto no [Vídeo de Apresentação](https://drive.google.com/drive/folders/1hXUiHSo0h73csPhoPgYV7acifhWlX10m?usp=sharing).
 
 <br>
 
