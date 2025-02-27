@@ -39,6 +39,7 @@
     "files.associations": {
         "led.h": "c",
         "pio.h": "c",
-        "ws2812.pio.h": "c"
+        "ws2812.pio.h": "c",
+        "pwm.h": "c"
     }
 }

@@ -11,7 +11,6 @@
 #include "pico/stdlib.h"
 #include "hardware/clocks.h"
 #include "hardware/i2c.h"
-#include "hardware/adc.h"
 #include "hardware/pwm.h"
 #include "hardware/pio.h"
 #include "lib/ssd1306.h"
