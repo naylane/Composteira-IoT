@@ -1,3 +1,12 @@
+/* 
+****************************************************
+    Sistema de Monitoramento de Composteira
+            Projeto Final EmbarcaTech
+
+        Autora: Naylane do Nascimento Ribeiro
+****************************************************
+*/
+
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/clocks.h"
@@ -23,7 +32,7 @@
 
 #define DEBOUNCE_TIME 200000        // Tempo para debounce em ms
 #define WAIT_TIME     1000000       // ...
-uint32_t last_time = 0;    // Tempo da última interrupção do botão do Joystick
+uint32_t last_time = 0;             // Tempo da última interrupção do botão do Joystick
 static uint32_t last_time_A = 0;    // Tempo da última interrupção do botão A
 static uint32_t last_time_B = 0;    // Tempo da última interrupção do botão B
 
@@ -49,7 +58,7 @@ uint sm = 0;
 // --- DECLARAÇÃO DE FUNÇÕES
 
 void update_data(int *data, bool increase);
-void led_status_display(ssd1306_t *ssd);
+void write_display(ssd1306_t *ssd);
 void irq_buttons(uint gpio, uint32_t events);
 void beep_buzzer();
 void buzzer_tone(int frequency);
@@ -70,9 +79,7 @@ int main() {
     clear_matrix(pio, sm);
 
     while (1) {
-        led_status_display(&ssd);
-
-        printf("Temperatura: %d; Umidade: %d; Oxigenio: %d \n", temperatura, umidade, oxigenio);
+        write_display(&ssd);
 
         if ((temperatura > 60) || (umidade > 70) || (oxigenio < 15)) {
             set_led(LED_R, 1);
@@ -81,7 +88,7 @@ int main() {
 
             set_led_matrix(11, pio, sm);
 
-            buzzer_tone(100); // Som de alerta (em Hz)
+            buzzer_tone(50); 
             sleep_ms(500);
             buzzer_off();      
         }
@@ -89,13 +96,13 @@ int main() {
             set_led(LED_R, 0);
             set_led(LED_G, 1);
             set_led(LED_B, 0);
-            set_led_matrix(10, pio, sm);
+            set_led_matrix(15, pio, sm);
         }
         else {
             set_led(LED_R, 0);
             set_led(LED_G, 0);
             set_led(LED_B, 1);
-            set_led_matrix(12, pio, sm);
+            set_led_matrix(15, pio, sm);
         }
 
         sleep_ms(1000);
@@ -134,6 +141,12 @@ void irq_buttons(uint gpio, uint32_t events){
 }
 
 
+/**
+ * @brief Simula a alteração de valores dos sensores.
+ * 
+ * @param data variável que irá ser alterada.
+ * @param increase booleano que informa se é incremento ou decremento de valor.
+ */
 void update_data(int *data, bool increase) {
     if (increase) {
         *data += 5;
@@ -148,25 +161,21 @@ void update_data(int *data, bool increase) {
  *
  * @param ssd Ponteiro para a estrutura do display.
  */
-void led_status_display(ssd1306_t *ssd) {
+void write_display(ssd1306_t *ssd) {
     // Limpa o display
     ssd1306_fill(ssd, false);
 
-    char msg_temp[10];  // Buffer para armazenar a string formatada
-    sprintf(msg_temp, "T %d", temperatura);
+    char msg_temp[20];  // Buffer para armazenar a string formatada
+    sprintf(msg_temp, "Temperatura %d", temperatura);
     ssd1306_draw_string(ssd, msg_temp, 0, 0);
 
-    char msg_umid[10];  // Buffer para armazenar a string formatada
-    sprintf(msg_umid, "U %d", umidade);
+    char msg_umid[20];  // Buffer para armazenar a string formatada
+    sprintf(msg_umid, "Umidade %d", umidade);
     ssd1306_draw_string(ssd, msg_umid, 0, 15);
 
-    char msg_oxig[10];  // Buffer para armazenar a string formatada
-    sprintf(msg_oxig, "O %d", oxigenio);
+    char msg_oxig[20];  // Buffer para armazenar a string formatada
+    sprintf(msg_oxig, "Oxigenio %d", oxigenio);
     ssd1306_draw_string(ssd, msg_oxig, 0, 30);
-
-    bool alert = gpio_get(LED_R);
-    char *msg_alert = alert ? "Alerta" : "Ok";
-    ssd1306_draw_string(ssd, msg_alert, 0, 45);
 
     // Atualiza o display
     ssd1306_send_data(ssd); 

@@ -114,7 +114,14 @@ const uint32_t numbers[][25] = {
     0, 1, 1, 1, 0,
     1, 0, 1, 0, 1,
     0, 0, 1, 0, 0,
-    0, 0, 1, 0, 0
+    0, 0, 1, 0, 0,
+
+    // maçã
+    0, 1, 1, 1, 0,
+    1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,
+    0, 0, 1, 0, 0,
+    0, 1, 0, 0, 0
 };
 
 /**
@@ -140,7 +147,7 @@ static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
 void set_led_matrix(uint8_t current_number, PIO pio, uint sm) {
     // Calcula a cor utilizando a função auxiliar baseada em matrix_rgb
     //uint32_t color = get_number_color(current_number);
-    uint32_t color = urgb_u32(22, 1, 12); // Cor rosa
+    uint32_t color = urgb_u32(20, 2, 10); // Cor rosa
 
     for (int i = 0; i < 25; i++) {
         if (numbers[current_number][i]) {
